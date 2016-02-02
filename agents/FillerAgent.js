@@ -1,5 +1,6 @@
 var _ = require('underscore');
 var Promise = require('bluebird');
+var co = require('co');
 var eve = require('evejs');
 
 function Agent(agent) {
@@ -65,22 +66,19 @@ Agent.prototype.takeDown = function(){
     .then(function(reply){
       if(reply.err) throw new Error('#deregister could not be performed' + err);
       else console.log('#deregister successfull');
+      process.exit();
     });
 };
 Agent.prototype.selfCheck = function(){
-  return Promise.resolve().bind(this)
-    .then(function(){
-      return this.rpc.request(this.DF, {method: 'search', params: {skill: 'fill'}})
-    })
-    .then(function(reply){
-      console.log('fill',reply);
-    })
-    .then(function() {
-      return this.rpc.request(this.DF, {method: 'search', params: {skill: 'getFillerLevel'}})
-    })
-    .then(function(reply){
-      console.log('getFillerLevel',reply);
-    });
+  //return co(function* (){
+  //  var results = yield [this.rpc.request(this.DF, {method: 'search', params: {skill: 'fill'}})
+  //                      , this.rpc.request(this.DF, {method: 'search', params: {skill: 'getFillerLevel'}})];
+  //  console.log(results);
+  //}.bind(this));
+
+  return Promise.all([this.rpc.request(this.DF, {method: 'search', params: {skill: 'fill'}})
+    , this.rpc.request(this.DF, {method: 'search', params: {skill: 'getFillerLevel'}})])
+    .then(console.log);
 };
 // Behaviour End ================================================================
 // ==============================================================================
