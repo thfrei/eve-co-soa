@@ -1,4 +1,5 @@
 "use strict";
+
 var _ = require('lodash');
 var eve = require('evejs');
 
@@ -9,6 +10,7 @@ function DFAgent(options) {
   eve.system.init({
     transports: options.transports
   });
+  console.log(this.id,' is connecting...');
   this.connect(eve.system.transports.getAll());
 
   // Properties =======================================================
