@@ -34,7 +34,7 @@ BottleAgent.prototype.constructor = BottleAgent; // not needed?
 
 BottleAgent.prototype.execute = function(){
   var self = this;
-  this.beFilled();
+  this.prePlanning();
 };
 
 // ==============================================================================
@@ -54,13 +54,19 @@ BottleAgent.prototype.rpcFunctions.getBottleStatus = function(params, from) {
 
 // ==============================================================================
 // Behaviour ====================================================================
-BottleAgent.prototype.beFilled = function(){
+BottleAgent.prototype.prePlanning = function(){
   var self = this;
 
   co(function* () {
     var agents = yield self._searchSkill('fill');
     agents = yield Promise.all(_.map(agents, (agent) => self._addStatus(agent)));
-    console.log('agents', agents);
+    var closestAgent = self.__computeClosestFiller(agents); // it might be nice to outsource the decision process?
+    // Now reserve filling
+
+    // Request transportation
+
+    // execute
+    console.log(closestAgent);
   })
   .catch(function(err){
     console.log('coCatch err',err);
@@ -69,6 +75,12 @@ BottleAgent.prototype.beFilled = function(){
 // Behaviour End ================================================================
 // ==============================================================================
 
+/**
+ *
+ * @param skill <string> 'fill'
+ * @returns {*|Promise.<T>}
+ * @private
+ */
 BottleAgent.prototype._searchSkill = function(skill){
   return this.rpc.request(this.DF,{method: 'search', params: {skill: skill}})
     .then(function(reply){
@@ -82,6 +94,12 @@ BottleAgent.prototype._searchSkill = function(skill){
     });
 };
 
+/**
+ *
+ * @param agentObj ojb={agent: 'FillerInstance', skills: [ 'fill', 'getFillerStatus', 'getFillerPosition' ]}
+ * @returns {*|Promise.<T>} {agent: '..', skills: [..], status: {a: 1, b:2 ,..}
+ * @private
+ */
 BottleAgent.prototype._addStatus = function(agentObj){
   return this.rpc.request(agentObj.agent, { method: 'getFillerStatus', params: {}})
     .then(function(status){
@@ -92,6 +110,28 @@ BottleAgent.prototype._addStatus = function(agentObj){
     .catch(function(err){
       console.log('_getStatus err',err);
     });
+};
+
+/**
+ *
+ * @param agentsObj [{agent: '..', skills: [..], status: {position: x, b:2 ,..}]
+ * @returns agentObj
+ * @private
+ */
+BottleAgent.prototype.__computeClosestFiller = function(agentsObj){
+  var currentPosition = 0;
+  var closestDistance = 999999999; // max Distance on track (really big number)
+  var closestAgent = undefined;
+
+  _.each(agentsObj, (agent) => {
+    let difference = Math.abs(agent.status.position - currentPosition);
+    if( difference < closestDistance ){
+      closestDistance = difference;
+      closestAgent = agent;
+    }
+  });
+
+  return closestAgent;
 };
 
 module.exports = BottleAgent;
