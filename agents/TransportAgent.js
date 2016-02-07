@@ -39,12 +39,20 @@ Agent.prototype.execute = function(){
 // Services =====================================================================
 Agent.prototype.rpcFunctions = {};
 Agent.prototype.rpcFunctions.transport = function(params, from) {
+  var self = this;
   console.log('#transport - RPC from:', from);
 
   // Move to position a   (alternatively: move to agent a)
   // Inform of arrival
   // Move to position b   (alternatively: move to agent b)
   // Inform of arrival
+  this._transportTo(params.Position)
+    .then(function() {
+       return self.rpc.request(from, {method: 'informOfArrival', params: {orderId: params.orderId}})
+        .then((msg) => console.log('informOfArrival called, returned:', msg))
+        .catch((err) => console.log('informOfArrival catched err', err))
+      }
+    );
 
   return {ack: 'transport will be executed'};
 };
@@ -89,6 +97,11 @@ Agent.prototype.takeDown = function(){
 
 Agent.prototype._visualizePosition = function(){
   console.log(this.status.position);
+};
+
+Agent.prototype._transportTo = function(pos){
+  console.log('_transportTo called..., transporting for 2s');
+  return Promise.delay(2000);
 };
 
 module.exports = Agent;

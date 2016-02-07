@@ -16,12 +16,14 @@ function Agent(agent) {
 
   // set Directory Facilitator
   this.DF = agent.DF;
-  this.skills = ['fill', 'getFillerStatus', 'getFillerPosition'];
+  this.skills = ['fill', 'getFillerStatus', 'getFillerPosition', 'reserve'];
   this.status = {
     fillerLevel: agent.initial.fillerLevel,
+    fillerLiquid: agent.initial.fillerLiquid,
     status: 'ready',
     position: agent.initial.position
   };
+  this.queue = [];
 
   // load the RPC module
   this.rpc = this.loadModule('rpc', this.rpcFunctions, {timeout: 5*1000});
@@ -33,7 +35,7 @@ Agent.prototype = Object.create(eve.Agent.prototype);
 Agent.prototype.constructor = Agent; // not needed?
 
 Agent.prototype.execute = function(){
-  return this.oneShot();
+  return this.register();
 };
 
 // ==============================================================================
@@ -44,12 +46,23 @@ Agent.prototype.rpcFunctions.fill = function(params, from) {
   return {err: 'not yet implemented'};
 };
 Agent.prototype.rpcFunctions.getFillerStatus = function(params, from) {
-  console.log('#getFillerLevel - RPC from:', from);
+  console.log('#getFillerStatus - RPC from:', from);
   return this.status;
 };
 Agent.prototype.rpcFunctions.getFillerPosition = function(params, from) {
   console.log('#getFillerPosition - RPC from:', from);
   return {err: 'not yet implemented'};
+};
+Agent.prototype.rpcFunctions.reserve = function(params, from){
+  console.log('#reserve - RPC from:', from);
+  var queueElement = {
+    client: from,
+    orderId: params.orderId,
+    product: params.product
+  };
+  this.queue.push(queueElement);
+  console.log('current queue:', this.queue);
+  return {ack: true, description: 'slot was reserved'};
 };
 // Services End =================================================================
 // ==============================================================================
@@ -57,17 +70,15 @@ Agent.prototype.rpcFunctions.getFillerPosition = function(params, from) {
 
 // ==============================================================================
 // Behaviour ====================================================================
-Agent.prototype.oneShot = function(){
-  return Promise.resolve().bind(this) // bluebird Promise required for Promise.bind()
-    .then(this.register);
-};
-
 Agent.prototype.register = function(){
   // Register skills
   return this.rpc.request(this.DF,{method: 'register', params: {skills: this.skills}})
     .then(function(reply){
       if(reply.err) throw new Error('#register could not be performed: ' + reply.err);
       else console.log('#register successfull');
+    })
+    .catch(function(err){
+      console.log('#register err',err);
     });
 };
 Agent.prototype.takeDown = function(){
@@ -77,18 +88,10 @@ Agent.prototype.takeDown = function(){
       if(reply.err) throw new Error('#deregister could not be performed' + err);
       else console.log('#deregister successfull');
       process.exit();
+    })
+    .catch(function(err){
+      console.log('#takeDown err:',err);
     });
-};
-Agent.prototype.selfCheck = function(){
-  //return co(function* (){
-  //  var results = yield [this.rpc.request(this.DF, {method: 'search', params: {skill: 'fill'}})
-  //                      , this.rpc.request(this.DF, {method: 'search', params: {skill: 'getFillerLevel'}})];
-  //  console.log(results);
-  //}.bind(this));
-
-  return Promise.all([this.rpc.request(this.DF, {method: 'search', params: {skill: 'fill'}})
-    , this.rpc.request(this.DF, {method: 'search', params: {skill: 'getFillerLevel'}})])
-    .then(console.log);
 };
 // Behaviour End ================================================================
 // ==============================================================================

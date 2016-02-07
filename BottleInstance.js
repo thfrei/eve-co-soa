@@ -33,4 +33,12 @@ var BottleInstance = new BottleAgent(agentOptions);
 Promise.all([BottleInstance.ready]).then(function () {
   // Register skill
   BottleInstance.execute();
-});
+
+  process.on('SIGINT', takeDown);
+  process.on('uncaughtException', takeDown);
+}).catch(function(err){console.log('exe',err)});
+
+// extra function is needed for closure on event
+function takeDown(){
+  BottleInstance.takeDown();
+};

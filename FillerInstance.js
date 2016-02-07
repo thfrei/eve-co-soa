@@ -8,6 +8,7 @@ program
   .version('0.0.2')
   .option('-a, --agent-name <name>', 'Agent name: e.g. BottleAgent5', /^(\w*)$/i, 'FillerInstance')
   .option('-l, --filler-level <float>', 'Filler level', parseFloat, 100)
+  .option('-f, --filler-liquid <liquid>', 'Liquid type', /^(\w*)$/i, 'beer')
   .option('-p, --position <float>', 'Filler Position', parseFloat, 40)
   .option('-d, --directory-facilitator <df>', 'Agent name of the Directory Facilitator', /^(\w*)$/i, 'DF')
   .parse(process.argv);
@@ -17,7 +18,8 @@ var agentOptions = {
   DF: program.directoryFacilitator,
   initial: {
     fillerLevel: program.fillerLevel,
-    position: program.position
+    position: program.position,
+    liquid: program.fillerLiquid
   },
   transports: [
     {

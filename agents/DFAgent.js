@@ -14,7 +14,7 @@ function DFAgent(options) {
   this.connect(eve.system.transports.getAll());
 
   // Properties =======================================================
-  this._agents = [];
+  this._agents = []; // [{agent: name, skills: [skill1, 2, 3]},{...}]
 
   // Properties End ===================================================
   this.rpc = this.loadModule('rpc', this.rpcFunctions, {timeout:2*1000});
@@ -65,7 +65,7 @@ DFAgent.prototype.rpcFunctions.deRegister = function(params, from){
 /**
  * find agent for skill
  *
- * TODO: remove skills in return value
+ * FIXME: really find the skill. Does not work.
  *
  * @param params {skill: 'skill'}
  * @param from
@@ -75,7 +75,8 @@ DFAgent.prototype.rpcFunctions.search = function(params, from) {
 
   // returns all skill-agent combinations with the required skill
   var found =  _.filter(this._agents, function(entry){
-    if(_.findIndex(entry.skills, params.skill)) {
+    // If skill can be found in skills-array
+    if(_.indexOf(entry.skills, params.skill) != -1) {
       return true;
     }
   });

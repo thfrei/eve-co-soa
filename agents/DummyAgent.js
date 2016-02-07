@@ -60,7 +60,10 @@ Agent.prototype.register = function(){
     .then(function(reply){
       if(reply.err) throw new Error('#register could not be performed: ' + reply.err);
       else console.log('#register successfull');
-    });
+    })
+    .catch(function(err){
+      console.log('#register catched err',err);
+    });;
 };
 Agent.prototype.takeDown = function(){
   // Deregister skills
@@ -69,6 +72,9 @@ Agent.prototype.takeDown = function(){
       if(reply.err) throw new Error('#deregister could not be performed' + err);
       else console.log('#deregister successfull');
       process.exit();
+    })
+    .catch(function(err){
+      console.log('#takeDown err:',err);
     });
 };
 // Behaviour End ================================================================

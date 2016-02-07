@@ -2,7 +2,7 @@
 
 var Promise = require('bluebird');
 var program = require('commander');
-var TransportAgent = require('./agents/TransportAgent');
+var DummyAgent = require('./agents/DummyAgent');
 
 program
   .version('0.0.2')
@@ -26,11 +26,11 @@ var agentOptions = {
 };
 
 // create two agents
-var TransportInstance = new TransportAgent(agentOptions);
+var DummyInstance = new DummyAgent(agentOptions);
 
-Promise.all([TransportInstance.ready]).then(function () {
+Promise.all([DummyInstance.ready]).then(function () {
   // Register skill
-  TransportInstance.execute();
+  DummyInstance.execute();
 
   process.on('SIGINT', takeDown);
   process.on('uncaughtException', takeDown);
@@ -38,5 +38,5 @@ Promise.all([TransportInstance.ready]).then(function () {
 
 // extra function is needed for closure on event
 function takeDown(){
-  TransportInstance.takeDown();
+  DummyInstance.takeDown();
 }
